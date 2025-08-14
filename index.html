@@ -1,0 +1,237 @@
+<html>
+ <!--  
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width"
+    />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script
+      type="module"
+      src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+    ></script>  
+  </head>
+
+  <body style="margin: 0; overflow: hidden">
+    <a-scene
+      embedded
+      vr-mode-ui="enabled: false"
+      renderer="logarithmicDepthBuffer: true"
+    >
+      <a-asset-item
+        id="angelfish"
+        src="https://cdn.glitch.global/20ef3aa1-d9ba-497b-8d66-ef808f46fe4b/Angelfish.glb?v=1713161743682"
+      ></a-asset-item>
+      <a-asset-item
+        id="whale"
+        src="https://cdn.glitch.global/20ef3aa1-d9ba-497b-8d66-ef808f46fe4b/whale.glb?v=1713163875351"
+      ></a-asset-item>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer
+        position="0 0 -2"
+        scale="0.1 0.1 0.1"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer
+        position="0.25 0.25 -2"
+        scale="0.1 0.1 0.1"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer
+        position="-0.25 0.25 -2"
+        scale="0.1 0.1 0.1"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer
+        position="-0.5 0 -2"
+        scale="0.1 0.1 0.1"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        id="kujira"
+        gltf-model="#whale"
+        animation-mixer
+        position="0 0 -3"
+        scale="1 1 1"
+        rotation="0 -90 0"
+      >
+        <script>
+          const el = document.querySelector("#kujira");
+          const radius = 5;
+          let angle = 0;
+          var move = function () {
+            //var t = new Date().getTime() / 3000;
+            angle += 2;
+            let radian = (angle * Math.PI) / 180;
+
+            let x = Math.cos(radian) * radius;
+            let z = Math.sin(radian) * radius;
+
+            el.setAttribute("position", { x: -x, y: 0, z: z });
+            el.setAttribute("rotation", {
+              x: 0,
+              y: Math.sin(radian) * 90,
+              z: 0,
+            });
+          };
+          setInterval(move, 100);
+        </script>
+      </a-entity>
+
+      <a-camera position="0 0 0">
+        <a-plane
+          position="0 0 -0.1"
+          scale="2 2 2"
+          color="#658CFF"
+          material="transparent: false; opacity: 0.4"
+        ></a-plane>
+      </a-camera>
+    </a-scene>
+  </body>
+-->
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width"
+    />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script
+      type="module"
+      src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+    ></script>
+    <style>
+      .video-container {
+        margin: 0 auto;
+        width: 100%;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+      }
+
+      .video-wrap {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: 100vh;
+        background: url(img/video.jpg) no-repeat center center/cover;
+      }
+
+      video {
+        min-width: 100%;
+        min-height: 100vh;
+        position: absolute;
+      }
+    </style>
+  </head>
+
+  <body style="margin: 0; overflow: hidden">
+    <div class="video-container">
+      <div class="video-wrap">
+        <video id="video" autoplay></video>
+      </div>
+    </div>
+    <script>
+      var video = document.getElementById("video");
+      var media = navigator.mediaDevices.getUserMedia({
+        video: true,
+        video: { facingMode: "environment" }, //背面カメラ
+        audio: false, //音声なし
+      });
+      //リアルタイム再生
+      media.then((stream) => {
+        video.srcObject = stream;
+      });
+    </script>
+    <a-scene>
+      <a-asset-item
+        id="angelfish"
+        src="https://cdn.glitch.global/20ef3aa1-d9ba-497b-8d66-ef808f46fe4b/Angelfish.glb?v=1713161743682"
+      ></a-asset-item>
+      <a-asset-item
+        id="whale"
+        src="https://cdn.glitch.global/20ef3aa1-d9ba-497b-8d66-ef808f46fe4b/whale.glb?v=1713163875351"
+      ></a-asset-item>
+      <a-camera position="0 0 0">
+        <a-plane
+          position="0 0 -0.1"
+          scale="2 2 2"
+          color="#658CFF"
+          material="transparent: false; opacity: 0.4"
+        ></a-plane>
+      </a-camera>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer
+        position="0 0 -2"
+        scale="0.2 0.2 0.2"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer        
+        position="0.5 0.5 -2"
+        scale="0.2 0.2 0.2"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer
+        position="-0.5 0.5 -2"
+        scale="0.2 0.2 0.2"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        gltf-model="#angelfish"
+        animation-mixer
+        position="-1 0 -2"
+        scale="0.2 0.2 0.2"
+        rotation="0 0 0"
+      ></a-entity>
+      <a-entity
+        id="kujira"
+        gltf-model="#whale"
+        animation-mixer="clip: *; timeScale:0.5"  
+        position="0 0 -5"
+        scale="1.5 1.5 1.5"
+      >
+        <script>
+          const el = document.querySelector("#kujira");
+          const radiusX = 8;
+          const radiusY = 5;
+          var angle = -2;
+          var move = function () {
+            angle += 2;
+            if(angle==360){
+              angle=0;
+            }
+            let radian = (angle * Math.PI) / 180;
+
+            var x = Math.cos(radian) * radiusX;
+            var z = Math.sin(radian) * radiusY;
+            el.setAttribute("position", { x: -x, y: 0, z: z });
+            el.setAttribute("rotation", {
+              x: 0,
+              y: angle,
+              z: 0,
+            });
+          };
+          setInterval(move, 100);
+        </script>
+        
+      </a-entity>
+    </a-scene>
+  </body> 
+</html>
