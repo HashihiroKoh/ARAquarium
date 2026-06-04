@@ -5,7 +5,126 @@
     <title>Aquarium</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+      // クジラの移動ロジックをA-Frameのコンポーネントとして登録
+      AFRAME.registerComponent("whale-move", {
+        init: function () {
+          this.radiusX = 15;
+          this.radiusY = 12;
+          this.angle = -3;
+        },
+        tick: function (time, timeDelta) {
+          // 毎フレーム実行される処理
+          this.angle += 0.5; // 移動速度の調整
+          if (this.angle >= 360 || this.angle <= -360) {
+            this.angle = 0;
+          }
+
+          let radian = (this.angle * Math.PI) / 180;
+          var x = Math.cos(radian) * this.radiusX;
+          var z = Math.sin(radian) * this.radiusY;
+
+          this.el.setAttribute("position", { x: -x, y: 1, z: z });
+          this.el.setAttribute("rotation", { x: 0, y: this.angle, z: 0 });
+        },
+      });
+      // イワシ専用の動的コンポーネントを登録
+      AFRAME.registerComponent("sardine-behavior", {
+        schema: {
+          index: { type: "int", default: 0 },
+        },
+        init: function () {
+          // --- ばらつき（ランダム要素）の設定 ---
+          this.speed = (3.5 + Math.random() * 3) * 0.1; // tick用に速度を調整（小さく）
+          this.an = Math.random() * 360; // 初期角度
+
+          this.rx = 1; // 基本のX半径
+          this.ry = 1; // 基本のZ半径
+
+          // インデックスに応じた配置計算（12列で折り返し）
+          const cols = 12;
+          const col = Math.floor(this.data.index / cols);
+          const row = this.data.index % cols;
+
+          // 回転の中心座標
+          this.centerX = 0 + 0.3 * col;
+          this.centerY = 0 + 0.5 * row;
+          this.centerZ = -5;
+
+          // 上下（波打ち）の動きのパラメーター
+          this.waveAmplitude = 0.3;
+          this.waveSpeed = 2;
+        },
+
+        // 毎フレーム実行される処理
+        tick: function (time, timeDelta) {
+          this.an += this.speed;
+          if (this.an >= 360) this.an -= 360;
+
+          let radian = (this.an * Math.PI) / 180;
+
+          const xx = this.centerX + Math.cos(radian) * this.rx;
+          const zz = this.centerZ + Math.sin(radian) * this.ry;
+          // 上下位置（Y軸）の計算
+          const yy =
+            this.centerY +
+            Math.sin(radian * this.waveSpeed) * this.waveAmplitude;
+
+          // 位置と回転を更新
+          this.el.setAttribute("position", { x: xx, y: yy, z: zz });
+          this.el.setAttribute("rotation", { x: 0, y: -this.an + 180, z: 0 });
+        },
+      });
+      // エンゼルフィッシュ専用の動的コンポーネントを登録
+      AFRAME.registerComponent("angelfish-behavior", {
+        init: function () {
+          // 1. スピードに個性を出す（tick用に値を調整）
+          this.speed = (1.5 + Math.random() * 3) * 0.1;
+          // 2. スタート位置
+          this.an = Math.random() * 360;
+          // 3. 上下（波打ち）の揺れ幅に個性を出す
+          this.waveAmplitude = 0.5 + Math.random() * 0.7;
+          // 4. 波打ちの速さに個性を出す
+          this.waveSpeed = 3 + Math.random() * 2;
+
+          // 基本のX半径・Z半径
+          this.rx = 5 + Math.random() * 3;
+          this.ry = 5 + Math.random() * 3;
+
+          // 回転の中心座標を設定
+          this.centerX = Math.random() * 2;
+          this.centerY = Math.random() * 2;
+          this.centerZ = 0;
+
+          // 回転方向（時計回りor反時計回り）
+          this.direction = Math.random() > 0.5 ? 1 : -1;
+        },
+
+        // 毎フレーム実行される処理
+        tick: function (time, timeDelta) {
+          this.an += this.speed * this.direction;
+          if (this.an >= 360) this.an -= 360;
+          if (this.an <= -360) this.an += 360;
+
+          let radian = (this.an * Math.PI) / 180;
+
+          const xx = this.centerX + Math.cos(radian) * this.rx;
+          const zz = this.centerZ + Math.sin(radian) * this.ry;
+          // 上下位置（Y軸）の計算
+          const yy =
+            this.centerY +
+            Math.sin(radian * this.waveSpeed) * this.waveAmplitude;
+
+          // 位置と回転を更新（進行方向を向くように計算）
+          this.el.setAttribute("position", { x: xx, y: yy, z: zz });
+          this.el.setAttribute("rotation", {
+            x: 0,
+            y: -this.an + (this.direction === 1 ? 180 : 0), // 進行方向を向くための角度調整
+            z: 0,
+          });
+        },
+      });
+    </script>
     <style>
       #camera-view,
       #aframe-container,
@@ -37,6 +156,21 @@
         z-index: 3;
         pointer-events: none;
       }
+      #loading-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        font-weight: bold;
+        color: #ffffff;
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 15px 30px;
+        border-radius: 8px;
+        z-index: 9; /* 一番手前に表示 */
+        pointer-events: none; /* クリックを透過 */
+        transition: opacity 0.5s ease; /* 消えるときのスムーズなアニメーション */
+      }
     </style>
   </head>
   <body style="margin: 0; overflow: hidden">
@@ -64,7 +198,7 @@
       <!-- 背景を透明化するために renderer="alpha: true" を追加 -->
       <a-scene embedded xr-mode-ui="enabled: false" renderer="alpha: true">
         <a-assets>
-          <a-asset-item id="angelfish" src="Angelfish.glb"></a-asset-item>
+          <a-asset-item id="angelfish" src="Angelfish.glb" crossorigin="anonymous"></a-asset-item>
           <a-asset-item
             id="whale"
             src="Whale.glb"
@@ -81,6 +215,7 @@
         <!-- クジラ -->
         <a-entity
           id="kujira"
+          whale-move
           gltf-model="#whale"
           animation-mixer
           position="0 1 -10"
@@ -88,29 +223,6 @@
           scale="7 7 7"
           visible="false"
         >
-          <script>
-            const el = document.querySelector("#kujira");
-            const radiusX = 15;
-            const radiusY = 12;
-            var angle = -3;
-            var move = function () {
-              angle += 2;
-              if (angle >= 360 || angle <= -360) {
-                angle = 0;
-              }
-              let radian = (angle * Math.PI) / 180;
-
-              var x = Math.cos(radian) * radiusX;
-              var z = Math.sin(radian) * radiusY;
-              el.setAttribute("position", { x: -x, y: 1, z: z });
-              el.setAttribute("rotation", {
-                x: 0,
-                y: angle,
-                z: 0,
-              });
-            };
-            setInterval(move, 100);
-          </script>
         </a-entity>
         <!-- イワシ -->
         <a-entity id="iwashi-group" visible="false"></a-entity>
@@ -121,7 +233,7 @@
           .querySelector("a-scene")
           .addEventListener("loaded", function () {
             //イワシグループの作成
-            const group = document.querySelector("#iwashi-group");
+            let group = document.querySelector("#iwashi-group");
             const verticalFish = 12; // 作りたい魚の数
             const horizontalFish = 6;
             for (let i = 0; i < horizontalFish; i++) {
@@ -130,19 +242,24 @@
                 fish.setAttribute("id", "iwashi" + horizontalFish * i + j);
                 fish.setAttribute("gltf-model", "#sardine");
                 fish.setAttribute("scale", "2 2 2");
+                fish.setAttribute("sardine-behavior", {
+                  index: verticalFish * i + j,
+                });
                 group.appendChild(fish);
-                SardineMoving(fish, verticalFish * i + j);
               }
             }
             //エンジェルフィッシュグループの作成
+            group = document.querySelector("#angelfish-group");
             const angelcnt = 20; // 作りたいエンジェルフィッシュの数
             for (let i = 0; i < angelcnt; i++) {
               let angel = document.createElement("a-entity");
               angel.setAttribute("id", "angel" + i);
               angel.setAttribute("gltf-model", "#angelfish");
               angel.setAttribute("scale", "0.05 0.05 0.05");
+              angel.setAttribute("angelfish-behavior", {
+                index: i,
+              });
               group.appendChild(angel);
-              AngelFishMoving(angel, i);
             }
           });
       </script>
@@ -167,9 +284,10 @@
         let angle1 = 0; // 波1の位相
         let angle2 = 0; // 波2の位相
         // カスタマイズ用パラメータ
-        const targetY = -50; //波の揺れ幅（waveHeight）より上まで上げて完全に隠す
+
         const riseSpeed = 1.5; // 上昇スピード(数値を大きくすると速くなります）
         const waveHeight = 25; // 波の揺れ幅（高さ）
+        const targetY = -waveHeight - 10; //波の揺れ幅（waveHeight）より上まで上げて完全に隠す
 
         let isFinished = false; // アニメーションが終了したかを管理するフラグ
         // アニメーションが終了したら魚表示
@@ -183,6 +301,8 @@
         }
 
         function animate() {
+          // 完全に終了していたらループを抜けて描画処理を停止
+          if (isFinished) return;
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           // 水位の上昇計算（目標値に達するまでマイナス）
           if (waveY > targetY) {
@@ -228,9 +348,20 @@
         document
           .querySelector("a-scene")
           .addEventListener("loaded", function () {
-            animate();
+            // 読み込み完了後、メッセージをふわっと消す
+            const loadingText = document.getElementById("loading-text");
+            if (loadingText) {
+              loadingText.style.opacity = "0";
+              // アニメーション（0.5秒）が終わったら要素自体を削除または非表示にする
+              setTimeout(() => {
+                loadingText.style.display = "none";
+              }, 500);
+            }
+            animate(); // 波のアニメーションを開始
           });
       </script>
     </div>
+    <!-- ローディングメッセージ -->
+    <div id="loading-text">しばらくお待ちください...</div>
   </body>
 </html>
