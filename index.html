@@ -127,6 +127,7 @@
     </script>
     <style>
       #camera-view,
+      #loading-text,
       #aframe-container,
       #wave {
         position: fixed;
@@ -140,23 +141,7 @@
         object-fit: cover;
         z-index: 1;
       }
-      /* 真ん中 A-Frameのオブジェクト */
-      #aframe-container {
-        z-index: 2;
-      }
-      /* 手前 波（水）を描画 */
-      #wave {
-        position: fixed;
-        left: 0;
-        width: 100%;
-        height: 100%; /* 高さの調整 */
-        top: auto; /* topの固定を解除 */
-        bottom: 0; /* 画面の一番下に配置 */
-        background: transparent;
-        z-index: 3;
-        pointer-events: none;
-      }
-      #loading-text {
+       #loading-text {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -167,10 +152,26 @@
         background-color: rgba(0, 0, 0, 0.6);
         padding: 15px 30px;
         border-radius: 8px;
-        z-index: 9; /* 一番手前に表示 */
+        z-index: 2; /* 一番手前に表示 */
         pointer-events: none; /* クリックを透過 */
         transition: opacity 0.5s ease; /* 消えるときのスムーズなアニメーション */
       }
+      /* 真ん中 A-Frameのオブジェクト */
+      #aframe-container {
+        z-index: 3;
+      }
+      /* 手前 波（水）を描画 */
+      #wave {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        height: 100%; /* 高さの調整 */
+        top: auto; /* topの固定を解除 */
+        bottom: 0; /* 画面の一番下に配置 */
+        background: transparent;
+        z-index: 4;
+        pointer-events: none;
+      }     
     </style>
   </head>
   <body style="margin: 0; overflow: hidden">
@@ -193,6 +194,9 @@
           });
       }
     </script>
+    </div>
+    <!-- ローディングメッセージ -->
+    <div id="loading-text">しばらくお待ちください...</div>
     <!-- A-Frame表示エリア -->
     <div id="aframe-container">
       <!-- 背景を透明化するために renderer="alpha: true" を追加 -->
@@ -360,8 +364,6 @@
             animate(); // 波のアニメーションを開始
           });
       </script>
-    </div>
-    <!-- ローディングメッセージ -->
-    <div id="loading-text">しばらくお待ちください...</div>
+    
   </body>
 </html>
