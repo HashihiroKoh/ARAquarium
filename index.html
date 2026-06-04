@@ -1,137 +1,236 @@
-<html>
+<!DOCTYPE html>
+<html lang="ja">
   <head>
     <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width"
-    />
+    <title>Aquarium</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    <script
-      type="module"
-      src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
-    ></script>
+    <script src="script.js"></script>
     <style>
-      .video-container {
-        margin: 0 auto;
-        width: 100%;
-        left: 0;
-        right: 0;
+      #camera-view,
+      #aframe-container,
+      #wave {
+        position: fixed;
         top: 0;
-        bottom: 0;
-      }
-
-      .video-wrap {
-        position: relative;
-        overflow: hidden;
+        left: 0;
         width: 100%;
-        height: 100vh;
-        background: url(img/video.jpg) no-repeat center center/cover;
+        height: 100%;
       }
-
-      video {
-        min-width: 100%;
-        min-height: 100vh;
-        position: absolute;
+      /* いちばん奥 camera映像*/
+      #camera-view {
+        object-fit: cover;
+        z-index: 1;
+      }
+      /* 真ん中 A-Frameのオブジェクト */
+      #aframe-container {
+        z-index: 2;
+      }
+      /* 手前 波（水）を描画 */
+      #wave {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        height: 100%; /* 高さの調整 */
+        top: auto; /* topの固定を解除 */
+        bottom: 0; /* 画面の一番下に配置 */
+        background: transparent;
+        z-index: 3;
+        pointer-events: none;
       }
     </style>
   </head>
-
   <body style="margin: 0; overflow: hidden">
-    <div class="video-container">
-      <div class="video-wrap">
-        <video id="video" autoplay></video>
-      </div>
-    </div>
+    <!-- カメラ映像用のビデオ要素 -->
+    <video id="camera-view" autoplay playsinline muted></video>
+    <!-- 背面カメラを起動するスクリプト -->
     <script>
-      var video = document.getElementById("video");
-      var media = navigator.mediaDevices.getUserMedia({
-        video: true,
-        video: { facingMode: "environment" }, //背面カメラ
-        audio: false, //音声なし
-      });
-      //リアルタイム再生
-      media.then((stream) => {
-        video.srcObject = stream;
-      });
+      const video = document.getElementById("camera-view");
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false,
+          })
+          .then((stream) => {
+            video.srcObject = stream;
+          })
+          .catch((error) => {
+            console.error("カメラの起動に失敗しました:", error);
+          });
+      }
     </script>
-    <a-scene>
-      <a-asset-item
-        id="angelfish"
-        src="Angelfish.glb"
-      ></a-asset-item>
-      <a-asset-item
-        id="whale"
-        src="whale.glb"
-      ></a-asset-item>
-      <a-camera position="0 0 0">
-        <a-plane
-          position="0 0 -0.1"
-          scale="2 2 2"
-          color="#658CFF"
-          material="transparent: false; opacity: 0.4"
-        ></a-plane>
-      </a-camera>
-      <a-entity
-        gltf-model="#angelfish"
-        animation-mixer
-        position="0 0 -2"
-        scale="0.2 0.2 0.2"
-        rotation="0 0 0"
-      ></a-entity>
-      <a-entity
-        gltf-model="#angelfish"
-        animation-mixer        
-        position="0.5 0.5 -2"
-        scale="0.2 0.2 0.2"
-        rotation="0 0 0"
-      ></a-entity>
-      <a-entity
-        gltf-model="#angelfish"
-        animation-mixer
-        position="-0.5 0.5 -2"
-        scale="0.2 0.2 0.2"
-        rotation="0 0 0"
-      ></a-entity>
-      <a-entity
-        gltf-model="#angelfish"
-        animation-mixer
-        position="-1 0 -2"
-        scale="0.2 0.2 0.2"
-        rotation="0 0 0"
-      ></a-entity>
-      <a-entity
-        id="kujira"
-        gltf-model="#whale"
-        animation-mixer="clip: *; timeScale:0.5"  
-        position="0 0 -5"
-        scale="1.5 1.5 1.5"
-      >
-        <script>
-          const el = document.querySelector("#kujira");
-          const radiusX = 8;
-          const radiusY = 5;
-          var angle = -2;
-          var move = function () {
-            angle += 2;
-            if(angle==360){
-              angle=0;
-            }
-            let radian = (angle * Math.PI) / 180;
+    <!-- A-Frame表示エリア -->
+    <div id="aframe-container">
+      <!-- 背景を透明化するために renderer="alpha: true" を追加 -->
+      <a-scene embedded xr-mode-ui="enabled: false" renderer="alpha: true">
+        <a-assets>
+          <a-asset-item id="angelfish" src="Angelfish.glb"></a-asset-item>
+          <a-asset-item
+            id="whale"
+            src="Whale.glb"
+            crossorigin="anonymous"
+          ></a-asset-item>
+          <a-asset-item
+            id="sardine"
+            src="Sardine.glb"
+            crossorigin="anonymous"
+          ></a-asset-item>
+        </a-assets>
+        <!-- エンゼルフィッシュ -->
+        <a-entity id="angelfish-group" visible="false"></a-entity>
+        <!-- クジラ -->
+        <a-entity
+          id="kujira"
+          gltf-model="#whale"
+          animation-mixer
+          position="0 1 -10"
+          rotation="0 -90 0"
+          scale="7 7 7"
+          visible="false"
+        >
+          <script>
+            const el = document.querySelector("#kujira");
+            const radiusX = 15;
+            const radiusY = 12;
+            var angle = -3;
+            var move = function () {
+              angle += 2;
+              if (angle >= 360 || angle <= -360) {
+                angle = 0;
+              }
+              let radian = (angle * Math.PI) / 180;
 
-            var x = Math.cos(radian) * radiusX;
-            var z = Math.sin(radian) * radiusY;
-            el.setAttribute("position", { x: -x, y: 0, z: z });
-            el.setAttribute("rotation", {
-              x: 0,
-              y: angle,
-              z: 0,
-            });
-          };
-          setInterval(move, 100);
-        </script>
-        
-      </a-entity>
-    </a-scene>
-  </body> 
+              var x = Math.cos(radian) * radiusX;
+              var z = Math.sin(radian) * radiusY;
+              el.setAttribute("position", { x: -x, y: 1, z: z });
+              el.setAttribute("rotation", {
+                x: 0,
+                y: angle,
+                z: 0,
+              });
+            };
+            setInterval(move, 100);
+          </script>
+        </a-entity>
+        <!-- イワシ -->
+        <a-entity id="iwashi-group" visible="false"></a-entity>
+      </a-scene>
+      <script>
+        // シーンの読み込み完了を待ってから実行
+        document
+          .querySelector("a-scene")
+          .addEventListener("loaded", function () {
+            //イワシグループの作成
+            const group = document.querySelector("#iwashi-group");
+            const verticalFish = 12; // 作りたい魚の数
+            const horizontalFish = 6;
+            for (let i = 0; i < horizontalFish; i++) {
+              for (let j = 0; j < verticalFish; j++) {
+                let fish = document.createElement("a-entity");
+                fish.setAttribute("id", "iwashi" + horizontalFish * i + j);
+                fish.setAttribute("gltf-model", "#sardine");
+                fish.setAttribute("scale", "2 2 2");
+                group.appendChild(fish);
+                SardineMoving(fish, verticalFish * i + j);
+              }
+            }
+            //エンジェルフィッシュグループの作成
+            const angelcnt = 20; // 作りたいエンジェルフィッシュの数
+            for (let i = 0; i < angelcnt; i++) {
+              let angel = document.createElement("a-entity");
+              angel.setAttribute("id", "angel" + i);
+              angel.setAttribute("gltf-model", "#angelfish");
+              angel.setAttribute("scale", "0.05 0.05 0.05");
+              group.appendChild(angel);
+              AngelFishMoving(angel, i);
+            }
+          });
+      </script>
+    </div>
+    <div id="wave">
+      <script defer type="module">
+        const container = document.getElementById("wave");
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        container.appendChild(canvas);
+
+        // 画面サイズにCanvasを合わせる
+        function resizeCanvas() {
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+        }
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        // 波の初期設定
+        let waveY = canvas.height; // 開始位置は画面の一番下
+        let angle1 = 0; // 波1の位相
+        let angle2 = 0; // 波2の位相
+        // カスタマイズ用パラメータ
+        const targetY = -50; //波の揺れ幅（waveHeight）より上まで上げて完全に隠す
+        const riseSpeed = 1.5; // 上昇スピード(数値を大きくすると速くなります）
+        const waveHeight = 25; // 波の揺れ幅（高さ）
+
+        let isFinished = false; // アニメーションが終了したかを管理するフラグ
+        // アニメーションが終了したら魚表示
+        function onAnimationComplete() {
+          let el = document.querySelector("#kujira");
+          el.setAttribute("visible", "true");
+          el = document.querySelector("#angelfish-group");
+          el.setAttribute("visible", "true");
+          el = document.querySelector("#iwashi-group");
+          el.setAttribute("visible", "true");
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // 水位の上昇計算（目標値に達するまでマイナス）
+          if (waveY > targetY) {
+            waveY -= riseSpeed;
+          } else {
+            // 目標位置（一番上）に達し、まだ終了処理をしていお出かけない場合
+            if (!isFinished) {
+              isFinished = true; // 二度と実行されないようにフラグを立てる
+              onAnimationComplete(); // 終了関数を実行
+            }
+          }
+          // 波1と波2の位相を進める（波の進む速さ）
+          angle1 += 0.02;
+          angle2 += 0.03;
+          // グラデーションの作成（上部から下部へ変化）
+          const gradient = ctx.createLinearGradient(
+            0,
+            waveY - waveHeight,
+            0,
+            canvas.height
+          );
+          gradient.addColorStop(0, "rgba(100, 230, 255, 0.60)"); // 水面：爽やかなシアン
+          gradient.addColorStop(0.4, "rgba(60, 160, 255, 0.55)"); // 中間：透き通るブルー
+          gradient.addColorStop(1, "rgba(40, 100, 220, 0.50)"); // 底：深みのあるロイヤルブルー
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          // 左端から右端まで波の線を計算しながら描画
+          ctx.moveTo(0, waveY);
+          for (let x = 0; x <= canvas.width; x++) {
+            // 2つのサイン波を合成して複雑な波を作る
+            const y1 = Math.sin(x * 0.005 + angle1) * waveHeight;
+            const y2 = Math.sin(x * 0.01 - angle2) * (waveHeight * 0.5);
+            ctx.lineTo(x, waveY + y1 + y2);
+          }
+          // 画面の右下、左下を結んで、波の下側全体を塗りつぶす
+          ctx.lineTo(canvas.width, canvas.height);
+          ctx.lineTo(0, canvas.height);
+          ctx.closePath();
+          ctx.fill();
+
+          requestAnimationFrame(animate);
+        }
+        document
+          .querySelector("a-scene")
+          .addEventListener("loaded", function () {
+            animate();
+          });
+      </script>
+    </div>
+  </body>
 </html>
