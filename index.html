@@ -322,7 +322,7 @@
         // カスタマイズ用パラメータ
         const riseSpeed = 1.5; // 上昇スピード(数値を大きくすると速くなります）
         const waveHeight = 25; // 波の揺れ幅（高さ）
-        const step = 10;           //何ピクセルごとに波を計算するか
+        const step = 15;           //何ピクセルごとに波を計算するか
         const targetY = -waveHeight - 10; //波の揺れ幅（waveHeight）より上まで上げて完全に隠す
         let isFinished = false; // アニメーションが終了したかを管理するフラグ
         let isLoaded = false;    // A-Frameロード完了フラグ
@@ -409,6 +409,9 @@ function drawFinalWater() {
             const y2 = Math.sin(x * 0.01 - angle2) * (waveHeight * 0.5);
             ctx.lineTo(x, waveY + y1+y2);
           }
+          const lastY1 = Math.sin(canvas.width * 0.005 + angle1) * waveHeight;
+          const lastY2 = Math.sin(canvas.width * 0.01 - angle2) * (waveHeight * 0.5);
+          ctx.lineTo(canvas.width, waveY + lastY1 + lastY2)
           // 画面の右下、左下を結んで、波の下側全体を塗りつぶす
           ctx.lineTo(canvas.width, canvas.height);
           ctx.lineTo(0, canvas.height);
